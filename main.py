@@ -3,6 +3,7 @@ from tkinter import ttk
 from time import strftime
 from components import TaskManager
 from components import PomodoroTimer
+from components import SimpleTimers
 # from components import *
 
 class SmartClockApp:
@@ -69,7 +70,7 @@ class SmartClockApp:
         '''Show the simple timers screen'''
 
         self.clear_window()
-        simple_timers.TimerUI(self.root, self.show_home)
+        SimpleTimers(self.root)
 
     def show_sleep_logger(self):
         '''Show the sleep logger screen'''

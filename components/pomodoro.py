@@ -221,8 +221,7 @@ class PomodoroTimer:
         task_manager.TaskManager(self.root)
 
     def return_to_home(self):
-        from main import SmartClockApp
         '''Return to the home screen'''
-        
+        from main import SmartClockApp
         self.close_db_conn()
         SmartClockApp(self.root) 
