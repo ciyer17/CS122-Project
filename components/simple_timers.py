@@ -23,11 +23,9 @@ class SimpleTimers:
 
         home_button = ttk.Button(self.root, text='Home', style='Custom.TButton', command=self.return_home).pack(anchor=tk.NW, padx=30, pady=30)
 
-        # Main frame
         main_frame = ttk.Frame(self.root, style='Custom.TFrame', padding=20)
         main_frame.pack(fill="both", expand=True)
 
-        # Label
         ttk.Label(main_frame, text="Simple Timers", background='#ff458c', font=("Arial", 30)).pack(pady=10)
 
         # Preset Timer Buttons

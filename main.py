@@ -4,6 +4,7 @@ from time import strftime
 from components import TaskManager
 from components import PomodoroTimer
 from components import SimpleTimers
+from components import SleepLogger
 # from components import *
 
 class SmartClockApp:
@@ -76,7 +77,7 @@ class SmartClockApp:
         '''Show the sleep logger screen'''
 
         self.clear_window()
-        sleep_logger.SleepLoggerUI(self.root, self.show_home)
+        SleepLogger(self.root)
 
     def show_task_addition(self):
         '''Show the task management screen'''

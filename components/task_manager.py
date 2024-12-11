@@ -39,7 +39,7 @@ class TaskManager:
         '''Return to the home screen'''
         
         self.close_db_conn()
-        SmartClockApp(self.root)        
+        SmartClockApp(self.root)
 
     def setup_database(self):
         '''Create the database tables if they don't exist'''
