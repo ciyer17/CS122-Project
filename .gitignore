@@ -1,3 +1,9 @@
+# Database Files
+*.db
+
+# Not-needed image files
+*.svg
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

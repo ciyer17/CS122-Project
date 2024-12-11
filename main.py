@@ -1,18 +1,17 @@
 import tkinter as tk
 from tkinter import ttk
 from time import strftime
-from components import *
+from components import TaskManager
+# from components import *
 
-# Step 1: Basic Setup
 class SmartClockApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Productivity & Wellness Clock")
         self.root.geometry("1280x720")
         self.root['background'] = '#5cffa5'
-        self.root.minsize(width=1280, height=550)
 
-        # Initial home screen setup
+        self.root.minsize(width=1280, height=550)
         self.show_home()
 
     def clear_window(self):
@@ -29,9 +28,9 @@ class SmartClockApp:
         bg_style.configure('Custom.TFrame', background='#5cffa5')
 
         main_frame = ttk.Frame(self.root, style='Custom.TFrame')
+        # When window is expanded, expand the frame to fill the window on both sides, and center the frame
         main_frame.pack(anchor=tk.CENTER, expand=True, fill='both')
 
-        # Left-side clock display
         clock_label = ttk.Label(main_frame, background='#5cffa5', font=("Arial", 48))
         clock_label.pack(pady=20)
         self.update_clock(clock_label)
@@ -40,7 +39,7 @@ class SmartClockApp:
         button_frame.pack(pady=100, anchor=tk.CENTER, expand=True, fill='both')
 
         btn_style = ttk.Style()
-        btn_style.configure('Custom.TButton', background='#FFEF0A', relief='solid', font=('Arial', 18), width=15)
+        btn_style.configure('Custom.TButton', background='#ffef0a', relief='solid', font=('Arial', 18), width=15)
 
         ttk.Button(button_frame, text="Pomodoro Timer", style='Custom.TButton', command=self.show_pomodoro).pack(side=tk.LEFT, padx=20)
         ttk.Button(button_frame, text="Simple Timers", style='Custom.TButton', command=self.show_timer).pack(side=tk.LEFT,padx=20)
@@ -48,39 +47,44 @@ class SmartClockApp:
         ttk.Button(button_frame, text="Tasks", style='Custom.TButton', command=self.show_task_addition).pack(side=tk.LEFT,padx=20)
         ttk.Button(button_frame, text="Google Calendar", style='Custom.TButton', command=self.show_google_calendar).pack(side=tk.LEFT, padx=20)
 
-        # Center the clock widget by aligning it to 50% of the width and height.
+        # Center the main_frame widget by aligning it to 50% of the width and height.
         main_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
         
-
     def update_clock(self, clock_label):
         '''Update the clock every second'''
 
-        current_time = strftime("%I:%M:%S %p") # 12-hour format
-        clock_label.config(text=current_time)
-        self.root.after(1000, lambda: self.update_clock(clock_label))
+        if clock_label.winfo_exists():
+            current_time = strftime("%I:%M:%S %p") # 12-hour format
+            clock_label.config(text=current_time)
+            self.root.after(1000, lambda: self.update_clock(clock_label))
 
     def show_pomodoro(self):
         '''Show the pomodoro screen'''
+
         self.clear_window()
         pomodoro.PomodoroUI(self.root, self.show_home)
 
     def show_timer(self):
         '''Show the simple timers screen'''
+
         self.clear_window()
         simple_timers.TimerUI(self.root, self.show_home)
 
     def show_sleep_logger(self):
         '''Show the sleep logger screen'''
+
         self.clear_window()
         sleep_logger.SleepLoggerUI(self.root, self.show_home)
 
     def show_task_addition(self):
         '''Show the task management screen'''
+
         self.clear_window()
-        task_manager.TaskAdditionUI(self.root, self.show_home)
+        TaskManager(self.root, self.show_home)
 
     def show_google_calendar(self):
         '''Show the Google Calendar screen'''
+
         self.clear_window()
         google_calendar.GoogleCalendarUI(self.root, self.show_home)
 
