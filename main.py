@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from time import strftime
 from components import TaskManager
+from components import PomodoroTimer
 # from components import *
 
 class SmartClockApp:
@@ -62,7 +63,7 @@ class SmartClockApp:
         '''Show the pomodoro screen'''
 
         self.clear_window()
-        pomodoro.PomodoroUI(self.root, self.show_home)
+        PomodoroTimer(self.root)
 
     def show_timer(self):
         '''Show the simple timers screen'''
@@ -80,7 +81,7 @@ class SmartClockApp:
         '''Show the task management screen'''
 
         self.clear_window()
-        TaskManager(self.root, self.show_home)
+        TaskManager(self.root)
 
     def show_google_calendar(self):
         '''Show the Google Calendar screen'''

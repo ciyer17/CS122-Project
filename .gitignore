@@ -4,6 +4,10 @@
 # Not-needed image files
 *.svg
 
+
+.vscode/
+launch.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

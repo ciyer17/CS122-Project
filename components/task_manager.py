@@ -6,9 +6,8 @@ import sqlite3
 from datetime import datetime
 
 class TaskManager:
-    def __init__(self, root, go_home):
+    def __init__(self, root):
         self.root = root
-        self.go_home = go_home
         self.conn = None
         self.cursor = None
         self.root['background'] = '#ff9f2a'
@@ -204,7 +203,7 @@ class TaskManager:
       self.tag_dropdown.pack(fill="x", pady=5)
       self.load_tags()
 
-      button_frame = ttk.Frame(update_frame, style='Custom.TFrame', )
+      button_frame = ttk.Frame(update_frame, style='Custom.TFrame')
       button_frame.pack(pady=100, anchor=tk.CENTER, expand=True, fill='both')
 
       btn_style = ttk.Style()
