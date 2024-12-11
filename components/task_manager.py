@@ -13,6 +13,7 @@ class TaskManager:
         self.cursor = None
         self.root['background'] = '#ff9f2a'
         self.root.minsize(width=1280, height=950)
+        self.task_list_tasks = []
 
         self.open_db_conn()
 
@@ -37,9 +38,7 @@ class TaskManager:
     def return_to_home(self):
         from main import SmartClockApp
         '''Return to the home screen'''
-        self.cursor.execute('''
-            DROP TABLE IF EXISTS tags;
-        ''')
+        
         self.close_db_conn()
         SmartClockApp(self.root)        
 
@@ -55,7 +54,7 @@ class TaskManager:
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL,
+                title TEXT UNIQUE NOT NULL,
                 due_date TEXT NOT NULL,
                 due_time TEXT,
                 description TEXT,
@@ -108,6 +107,10 @@ class TaskManager:
         self.task_list = tk.Listbox(task_frame, height=20, width=50)
         self.task_list.pack(pady=10)
 
+        # Buttons for updating and deleting tasks
+        self.update_button = ttk.Button(task_frame, style='Custom.TButton', text="Update Task", command=self.render_update_task_form).pack(pady=10)
+        self.delete_button = ttk.Button(task_frame, style='Custom.TButton', text="Delete Task", command=self.delete_task).pack(pady=10)
+
         # Load tasks into the list
         self.load_tasks()
 
@@ -140,7 +143,7 @@ class TaskManager:
         self.tag_entry = ttk.Entry(task_frame, textvariable=self.tag_var)
         self.tag_entry.pack(fill="x", pady=5)
         ttk.Button(task_frame, text="Add Tag", command=self.add_new_tag).pack(pady=5)
-        self.tag_dropdown = ttk.Combobox(task_frame, state="readonly")
+        self.tag_dropdown = ttk.Combobox(task_frame, textvariable=self.tag_var, state="readonly")
         self.tag_dropdown.pack(fill="x", pady=5)
         self.load_tags()
 
@@ -152,7 +155,93 @@ class TaskManager:
 
         # Task Options
         ttk.Button(button_frame, style='Custom.TButton', text="Save Task", command=lambda: self.save_task(date_vars[2], date_vars[0], date_vars[1])).pack(side=tk.LEFT, padx=20)
-        ttk.Button(button_frame, style='Custom.TButton', text="Back", command=lambda: self.create_task_manager_ui).pack(side=tk.LEFT, padx=20)
+        ttk.Button(button_frame, style='Custom.TButton', text="Back", command=self.create_task_manager_ui).pack(side=tk.LEFT, padx=20)
+
+    def render_update_task_form(self):
+      '''Renders the task update form'''
+      selected_index = self.task_list.curselection()
+      if not selected_index:
+          messagebox.showerror("Error", "Please select a task to update.")
+          return
+      
+      task = self.task_list_tasks[selected_index[0]]  # Get task metadata
+      self.cursor.execute("SELECT id FROM tasks WHERE title = ?", (task[0],))
+      task_id = self.cursor.fetchone()[0]
+
+      # Clear left frame and create update form
+      for widget in self.left_frame.winfo_children():
+          widget.destroy()
+
+      bg_style = ttk.Style()
+      bg_style.configure('Custom.TFrame', background='#ff9f2a')
+
+      update_frame = ttk.Frame(self.left_frame, style='Custom.TFrame')
+      update_frame.pack(expand=True, fill='both')
+
+      ttk.Label(update_frame, background='#ff9f2a', text="Update Task", font=("Arial", 16)).pack(pady=10)
+
+      # Populate fields with task data
+      self.title_entry = self.create_form_field(update_frame, "Title:")
+      self.title_entry.insert(0, task[0])  # Pre-fill with current title
+
+      date_vars = self.create_date_incrementer(update_frame)
+      self.date_entry = f"{date_vars[0].get()}-{date_vars[1].get()}-{date_vars[2].get()}"
+
+      time_vars = self.create_time_selector(update_frame)
+      self.time_entry = (time_vars[0], time_vars[1])
+      self.am_pm_var = time_vars[2]
+
+      self.description_entry = self.create_form_field(update_frame, "Description:", True)
+      self.description_entry.insert("1.0", task[3])  # Pre-fill with current description
+
+      # Tag management
+      ttk.Label(update_frame, background='#ff9f2a', text="Tag:").pack(anchor="w", pady=5)
+      self.tag_var = tk.StringVar(value=task[4])
+      self.tag_entry = ttk.Entry(update_frame, textvariable=self.tag_var)
+      self.tag_entry.pack(fill="x", pady=5)
+      ttk.Button(update_frame, text="Add Tag", command=self.add_new_tag).pack(pady=5)
+      self.tag_dropdown = ttk.Combobox(update_frame, textvariable=self.tag_var, state="readonly")
+      self.tag_dropdown.pack(fill="x", pady=5)
+      self.load_tags()
+
+      button_frame = ttk.Frame(update_frame, style='Custom.TFrame', )
+      button_frame.pack(pady=100, anchor=tk.CENTER, expand=True, fill='both')
+
+      btn_style = ttk.Style()
+      btn_style.configure('Custom.TButton', background='#ffef0a', relief='solid', font=('Arial', 18), width=15)
+
+      # Save updated task
+      ttk.Button(button_frame, text="Save Changes", style='Custom.TButton', command=lambda: self.update_task(task_id, date_vars[2], date_vars[0], date_vars[1])).pack(side=tk.LEFT, padx=20)
+      ttk.Button(button_frame, text="Back", style='Custom.TButton', command=self.create_task_manager_ui).pack(side=tk.LEFT, padx=20)
+
+    def update_task(self, task_id, year_var, month_var, day_var):
+      '''Update an existing task in the database'''
+      title = self.title_entry.get()
+      if title == "":
+          messagebox.showerror("Error", "Title cannot be empty.")
+          return
+
+      due_date = f"{year_var.get()}-{int(month_var.get()):02}-{int(day_var.get()):02}"
+      hour = self.time_entry[0].get()
+      minute = self.time_entry[1].get()
+      am_pm = self.am_pm_var.get()
+      due_time = self.convert_time_to_24hour(f"{hour}:{minute} {am_pm}") if hour and minute else None
+      description = self.description_entry.get("1.0", tk.END).strip()
+
+      tag_name = self.tag_var.get().strip()
+      if not tag_name:
+          tag_name = "misc"
+      self.cursor.execute("INSERT OR IGNORE INTO tags (name) VALUES (?)", (tag_name,))
+      self.conn.commit()
+      self.cursor.execute("SELECT id FROM tags WHERE name = ?", (tag_name,))
+      tag_id = self.cursor.fetchone()[0]
+
+      self.cursor.execute(
+          "UPDATE tasks SET title = ?, due_date = ?, due_time = ?, description = ?, tag_id = ? WHERE id = ?",
+          (title, due_date, due_time, description, tag_id, task_id)
+      )
+      self.conn.commit()
+      self.load_tasks()
 
     def create_form_field(self, frame, label_text, is_multiline=False):
         '''Create a form field with a label'''
@@ -165,6 +254,7 @@ class TaskManager:
         return entry
     
     def create_date_incrementer(self, frame):
+        '''Create a date incrementer with spinboxes for month, day, and year'''
         ttk.Label(frame, anchor='center', background='#ff9f2a', text="Date (MM-DD-YYYY):").pack(anchor="w", pady=5)
 
         bg_style = ttk.Style()
@@ -191,6 +281,7 @@ class TaskManager:
         return (month_var, date_var, year_var)
 
     def create_time_selector(self, frame):
+        '''Create a time selector with spinboxes for hour, minute, and AM/PM'''
         ttk.Label(frame, anchor='center', background='#ff9f2a', text="Time (Leave Empty for All-Day):").pack(anchor="w", pady=5)
 
         bg_style = ttk.Style()
@@ -230,12 +321,14 @@ class TaskManager:
             return None
         
     def validate_month(self, value):
+        '''Validate the month spinbox'''
         if value.isdigit():
             month = int(value)
             return month >= 1 and month <= 12
         return False
     
     def validate_day(self, value, year_var, month_var):
+        '''Validate the day spinbox'''
         if value.isdigit():
             day = int(value)
             month = int(month_var.get())
@@ -249,18 +342,21 @@ class TaskManager:
         return False
         
     def validate_year(self, value):
+        '''Validate the year spinbox'''
         if value.isdigit():
             year = int(value)
             return year >= 2024 and year <= 2040
         return False
     
     def validate_hour(self, value):
+        '''Validate the hour spinbox'''
         if value.isdigit():
             hour = int(value)
             return hour >= 1 and hour <= 12
         return False
     
     def validate_minutes(self, value):
+        '''Validate the minute spinbox'''
         if value.isdigit():
             minute = int(value)
             return minute >= 0 and minute <= 59
@@ -274,8 +370,8 @@ class TaskManager:
         if not self.tag_var.get():
             self.tag_var.set("misc")
 
-
     def add_new_tag(self):
+        '''Add a new tag to the database'''
         new_tag = self.tag_var.get().strip()
         if new_tag:
             self.cursor.execute("INSERT OR IGNORE INTO tags (name) VALUES (?)", (new_tag,))
@@ -284,11 +380,11 @@ class TaskManager:
         else:
             tk.messagebox.showerror("Error", "Tag name cannot be empty.")
 
-
     def load_tasks(self):
         '''Load tasks from the database and display them in the listbox'''
         # Clear current list
         self.task_list.delete(0, tk.END)
+        self.task_list_tasks = []
 
         # Fetch and display tasks
         self.cursor.execute('''
@@ -300,8 +396,9 @@ class TaskManager:
 
         for task in tasks:
             task_time = self.convert_time_to_ampm(task[2]) if task[2] else 'All-Day'
-            task_display = f"{task[0]} | {task[1]} {task_time} | {task[4]} | {task[5]}"
+            task_display = f"{task[0]} | {task[1]} | {task_time} | {task[4]} | {task[5]} | {task[3]}"
             self.task_list.insert(tk.END, task_display)
+            self.task_list_tasks.append(task)
 
     def save_task(self, year_var, month_var, day_var):
         '''Save a new task to the database'''
@@ -346,3 +443,18 @@ class TaskManager:
 
         # Reload task list and reset UI
         self.create_task_manager_ui()
+
+    def delete_task(self):
+      '''Delete the selected task from the database'''
+      selected_index = self.task_list.curselection()
+      if not selected_index:
+          messagebox.showerror("Error", "Please select a task to delete.")
+          return
+
+      tup = self.task_list_tasks[selected_index[0]]
+      self.cursor.execute("SELECT id FROM tasks WHERE title = ?", (tup[0],))
+      task_id = self.cursor.fetchone()[0]
+      # task_id = self.task_list_tasks[selected_index[0]][0]  # Get task ID
+      self.cursor.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+      self.conn.commit()
+      self.load_tasks()
