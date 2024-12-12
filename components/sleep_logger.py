@@ -36,10 +36,6 @@ class SleepLogger:
     def return_to_home(self):
         from main import SmartClockApp
         '''Return to the home screen'''
-        self.cursor.execute('''
-            DROP TABLE IF EXISTS sleep_logs
-        ''')
-        self.conn.commit()
         self.close_db_conn()
         SmartClockApp(self.root)
 
