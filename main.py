@@ -6,12 +6,14 @@ from components import PomodoroTimer
 from components import SimpleTimers
 from components import SleepLogger
 from components import HabitTracker
+from components import GoogleCalendarIntegration
 import threading
 import time
 from plyer import notification
 import sqlite3
+import os
 import webbrowser
-# from components import *
+
 
 class SmartClockApp:
     def __init__(self, root):
@@ -57,7 +59,7 @@ class SmartClockApp:
         ttk.Button(button_frame, text="Simple Timers", style='Custom.TButton', command=self.show_timer).grid(row=0, column=1, padx=20, pady=10)
         ttk.Button(button_frame, text="Sleep Logger", style='Custom.TButton', command=self.show_sleep_logger).grid(row=0, column=2, padx=20, pady=10)
         ttk.Button(button_frame, text="Tasks", style='Custom.TButton', command=self.show_task_addition).grid(row=1, column=0, padx=20, pady=10)
-        # ttk.Button(button_frame, text="Google Calendar", style='Custom.TButton', command=self.show_google_calendar).grid(row=1, column=1, padx=20, pady=10)
+        ttk.Button(button_frame, text="Google Calendar", style='Custom.TButton', command=self.show_google_calendar).grid(row=1, column=1, padx=20, pady=10)
         ttk.Button(button_frame, text="Habit Tracker", style='Custom.TButton', command=self.show_habit_tracker).grid(row=1, column=2, padx=20, pady=10, columnspan=3)
 
         survey = ttk.Button(self.root, text="Survey", style='Custom.TButton', command=self.open_survey)
@@ -108,11 +110,11 @@ class SmartClockApp:
         self.clear_window()
         TaskManager(self.root)
 
-    # def show_google_calendar(self):
-    #     '''Show the Google Calendar screen'''
+    def show_google_calendar(self):
+         '''Show the Google Calendar screen'''
 
-    #     self.clear_window()
-    #     google_calendar.GoogleCalendarUI(self.root, self.show_home)
+         self.clear_window()
+         GoogleCalendarIntegration(self.root)
 
     def show_habit_tracker(self):
         '''Show the habit tracker screen'''
@@ -151,7 +153,8 @@ class SmartClockApp:
         while True:
             time.sleep(86400)  # Check once a day
             try:
-                conn = sqlite3.connect(db_path)
+                db_dir = os.path.join(os.getcwd(), "data")
+                conn = sqlite3.connect(f"{db_dir}/tasks.db")
                 cursor = conn.cursor()
                 cursor.execute("SELECT hours_slept FROM sleep_logs ORDER BY date DESC LIMIT 1")
                 result = cursor.fetchone()
@@ -164,6 +167,7 @@ class SmartClockApp:
                     )
             except Exception as e:
                 print(f"Error checking sleep data: {e}")
+                return
 
 if __name__ == "__main__":
     root = tk.Tk()

@@ -4,7 +4,9 @@
 # Not-needed image files
 *.svg
 
+credentials.json
 client-calendar.json
+token.pickle
 .vscode/
 launch.json
 
